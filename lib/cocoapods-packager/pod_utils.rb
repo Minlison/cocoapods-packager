@@ -61,7 +61,6 @@ module Pod
           # 增加本地 local  source
           generator.transitive_local_dependencies(spec_file, local_sources).each do |dependency, podspec_file|
             pod_options = {}
-            puts podspec_file
             pod_options[:path] = if podspec_file[0] == '/' # absolute path
                                     Pathname.new(podspec_file)
                                  else
@@ -78,6 +77,16 @@ module Pod
           target('packager') do
             inherit! :complete
           end
+          # pre_install do |installer|
+          #   # Do something fancy!
+          #   currentFilePath = Pathname.new(File.dirname(__FILE__)).realpath
+        
+            
+          #   conflictPaths = Array["#{currentFilePath}/Pods/XesAppAliPaySDK/XesAppAliPaySDK/XesAppAliPaySDK/Openssl/libcrypto.a","#{currentFilePath}/Pods/XesAppAliPaySDK/XesAppAliPaySDK/XesAppAliPaySDK/Openssl/libssl.a"]
+          #   for path in conflictPaths do
+          #       File.delete(path) if File::exists?( "#{path}" )
+          #   end
+          # end
         end
       end
 

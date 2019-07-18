@@ -20,12 +20,13 @@ module Pod
       if @dynamic
       spec = <<RB
   s.#{platform.name}.deployment_target    = '#{platform.deployment_target}'
-  s.#{platform.name}.vendored_framework   = '#{fwk_base}'
+  s.#{platform.name}.vendored_frameworks   = '#{platform.name.to_s}/*.framework'
 RB
       else
       spec = <<RB
   s.#{platform.name}.deployment_target    = '#{platform.deployment_target}'
-  s.#{platform.name}.vendored_framework   = '#{fwk_base}'
+  s.#{platform.name}.vendored_frameworks   = '#{platform.name.to_s}/*.framework'
+  s.#{platform.name}.vendored_libraries   = '#{platform.name.to_s}/*.a'
   s.#{platform.name}.source_files   = '#{fwk_base}/Headers/**/*.h'
   s.#{platform.name}.public_header_files   = '#{fwk_base}/Headers/**/*.h'
   s.#{platform.name}.resources   = '#{fwk_base}/Resources/**/*.*'
@@ -37,15 +38,16 @@ RB
 RB
       end
 
-      %w(frameworks weak_frameworks libraries requires_arc xcconfig).each do |attribute|
-        attributes_hash = @spec.attributes_hash[platform.name.to_s]
-        next if attributes_hash.nil?
-        value = attributes_hash[attribute]
-        next if value.nil?
-
-        value = "'#{value}'" if value.class == String
-        spec += "  s.#{platform.name}.#{attribute} = #{value}\n"
+      [@spec, *@spec.recursive_subspecs].flat_map do |spec|
+        spec.all_dependencies(platform)
+      end.compact.uniq.each do |d|
+        if d.requirement == Pod::Requirement.default
+          spec += "  s.dependency = '#{d.name}'\n" unless d.root_name == @spec.name
+        else
+          spec += "  s.dependency = '#{d.name}', '#{d.requirement.to_s}'\n" unless d.root_name == @spec.name
+        end
       end
+      
       spec
     end
 
@@ -62,17 +64,23 @@ RB
 
     def spec_header
       spec = "Pod::Spec.new do |s|\n"
+        attribute_list = %w(name version summary license authors homepage description social_media_url
+        docset_url documentation_url screenshots frameworks weak_frameworks libraries requires_arc
+        deployment_target xcconfig)
 
-      %w(name version summary license authors homepage description social_media_url
-         docset_url documentation_url screenshots frameworks weak_frameworks libraries requires_arc
-         deployment_target xcconfig).each do |attribute|
+      if "#{@source}".empty?
+        attribute_list << "source"
+      else
+        spec + "  s.source = #{@source}\n"
+      end
+      
+      attribute_list.each do |attribute|
         value = @spec.attributes_hash[attribute]
         next if value.nil?
         value = value.dump if value.class == String
         spec += "  s.#{attribute} = #{value}\n"
       end
-
-      spec + "  s.source = #{@source}\n\n"
+      spec
     end
   end
 end

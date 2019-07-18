@@ -232,7 +232,38 @@ MAP
       FileUtils.cp(license_file, '.') if license_file.exist?
     end
 
+    def copy_vendored_libs
+      
+      if @dynamic
+      else
+        vendored_frameworks = [@spec, *@spec.recursive_subspecs].flat_map do |spec|
+          expand_paths(spec.consumer(@platform).vendored_frameworks)
+        end.compact.uniq
+
+        if vendored_frameworks.count > 0
+          vendored_frameworks_path = "ios"
+          if !File.exist?(vendored_frameworks_path)
+            FileUtils.mkdir_p vendored_frameworks_path
+          end
+          `cp -rp #{vendored_frameworks.join(' ')} #{vendored_frameworks_path}`
+        end
+
+        vendored_libraries = [@spec, *@spec.recursive_subspecs].flat_map do |spec|
+          expand_paths(spec.consumer(@platform).vendored_libraries)
+        end.compact.uniq
+
+        if vendored_libraries.count > 0
+          vendored_libraries_path = "ios"
+          if !File.exist?(vendored_libraries_path)
+            FileUtils.mkdir_p vendored_libraries_path
+          end
+          `cp -rp #{vendored_libraries.join(' ')} #{vendored_libraries_path}`
+        end
+      end
+    end
+
     def copy_resources
+      copy_vendored_libs
       bundles = Dir.glob("#{@static_sandbox_root}/build/*.bundle")
       if @dynamic
         resources_path = "ios/#{@spec.name}.framework"

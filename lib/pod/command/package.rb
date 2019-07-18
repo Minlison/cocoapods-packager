@@ -21,7 +21,11 @@ module Pod
           ['--configuration', 'Build the specified configuration (e.g. Debug). Defaults to Release'],
           ['--subspecs', 'Only include the given subspecs'],
           ['--spec-sources=private,https://github.com/CocoaPods/Specs.git', 'The sources to pull dependent ' \
-            'pods from (defaults to https://github.com/CocoaPods/Specs.git)']
+            'pods from (defaults to https://github.com/CocoaPods/Specs.git)'],
+          ['--local-sources=../Demo,/Demo', '相对 podspec 路径，Paths from which to find local podspecs for transitive dependencies. Multiple local-sources must be comma-delimited.' \
+            'pods from local'],
+          ['--no-repos', '不自动添加 pod repo list 显示出的 source'],
+          ['--repo-update', 'update repo'],
         ]
       end
 
@@ -46,7 +50,9 @@ module Pod
         @name = argv.shift_argument
         @source = argv.shift_argument
         @spec_sources = argv.option('spec-sources', 'https://github.com/CocoaPods/Specs.git').split(',')
-
+        @local_sources = argv.option('local-sources', '').split(',')
+        @no_repos = argv.flag?('no-repos', false)
+        @repo_update = argv.flag?('repo-update', false)
         subspecs = argv.option('subspecs')
         @subspecs = subspecs.split(',') unless subspecs.nil?
 
@@ -75,12 +81,37 @@ module Pod
           return
         end
 
+        if !@no_repos
+          if @spec_sources.nil?
+            @spec_sources = []
+          end
+          config.sources_manager.all.each do |s|
+            @spec_sources << s.url
+          end
+        end
+        
+        if @repo_update
+          update_sources
+        end
+
         target_dir, work_dir = create_working_directory
         return if target_dir.nil?
         build_package
 
         `mv "#{work_dir}" "#{target_dir}"`
         Dir.chdir(@source_dir)
+      end
+
+      def update_sources
+        UI.title 'Updating specs repos' do
+          @spec_sources.each do |source|
+            source = config.sources_manager.source_with_name_or_url(source)
+            UI.titled_section "Updating spec repo `#{source.name}`" do
+              source.update(config.verbose?)
+              source.verify_compatibility!
+            end
+          end
+        end
       end
 
       private

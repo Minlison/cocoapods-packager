@@ -19,7 +19,8 @@ module Pod
           platform_name,
           @spec.deployment_target(platform_name),
           @subspecs,
-          @spec_sources
+          @spec_sources,
+          @local_sources
         )
 
         static_installer = Installer.new(sandbox, podfile)
@@ -38,7 +39,7 @@ module Pod
         static_installer
       end
 
-      def podfile_from_spec(path, spec_name, platform_name, deployment_target, subspecs, sources)
+      def podfile_from_spec(path, spec_name, platform_name, deployment_target, subspecs, sources, local_sources)
         options = {}
         if path
           if @local
@@ -48,10 +49,27 @@ module Pod
           end
         end
         options[:subspecs] = subspecs if subspecs
+        generator = self
+        spec_file = @spec
+        source_dir = @source_dir
+
         Pod::Podfile.new do
           sources.each { |s| source s }
           platform(platform_name, deployment_target)
           pod(spec_name, options)
+
+          # 增加本地 local  source
+          generator.transitive_local_dependencies(spec_file, local_sources).each do |dependency, podspec_file|
+            pod_options = {}
+            puts podspec_file
+            pod_options[:path] = if podspec_file[0] == '/' # absolute path
+                                    Pathname.new(podspec_file)
+                                 else
+                                    expand_path = File.expand_path(podspec_file,source_dir)
+                                    Pathname.new(expand_path)
+                                 end
+            pod dependency.name, **pod_options
+          end
 
           install!('cocoapods',
                    :integrate_targets => false,
@@ -63,6 +81,47 @@ module Pod
         end
       end
 
+      public
+      
+      def recursive_subspecs_dependencies(spec)
+        dependencies = []
+        spec.recursive_subspecs.each do |subspec|
+          subspec.dependencies.each do |depency|
+            if ! "#{depency}".include? "#{spec.name}"
+              dependencies << depency
+            end
+          end
+        end
+        return dependencies
+      end
+
+      def transitive_local_dependencies(spec, paths)
+        dependencies = recursive_subspecs_dependencies(spec)
+        return_list = []
+        dependencies.each do |dependency|
+          found_podspec_file = nil
+          name = dependency.name.split('/')[0]
+          paths.each do |path|
+            # 展开目录
+            if path[0] != '/'
+                path = File.expand_path(path, @source_dir)
+            end
+            podspec_file = path + '/' + name + '.podspec'
+            next unless File.file?(podspec_file)
+            found_podspec_file = podspec_file
+            break
+          end
+          next unless found_podspec_file
+          return_list << [dependency, found_podspec_file]
+          dep_spec = Pod::Specification.from_file(found_podspec_file)
+          dep_spec.dependencies.each do |d_dep|
+            dependencies << d_dep unless dependencies.include? d_dep
+          end
+        end
+        return_list
+      end
+
+      private
       def binary_only?(spec)
         deps = spec.dependencies.map { |dep| spec_with_name(dep.name) }
         [spec, *deps].each do |specification|

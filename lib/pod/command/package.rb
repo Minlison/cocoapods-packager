@@ -26,6 +26,7 @@ module Pod
             'pods from local'],
           ['--no-repos', '不自动添加 pod repo list 显示出的 source'],
           ['--repo-update', 'update repo'],
+          ['--work-dir', 'the dir when build '],
         ]
       end
 
@@ -53,6 +54,7 @@ module Pod
         @local_sources = argv.option('local-sources', '').split(',')
         @no_repos = argv.flag?('no-repos', false)
         @repo_update = argv.flag?('repo-update', false)
+        @work_dir = argv.flag?('work-dir', nil)
         subspecs = argv.option('subspecs')
         @subspecs = subspecs.split(',') unless subspecs.nil?
 
@@ -166,8 +168,11 @@ module Pod
       def create_working_directory
         target_dir = create_target_directory
         return if target_dir.nil?
-
-        work_dir = Dir.tmpdir + '/cocoapods-' + Array.new(8) { rand(36).to_s(36) }.join
+        rootDir = @work_dir
+        if rootDir.nil?
+          rootDir = Dir.tmpdir
+        end
+        work_dir = rootDir + '/cocoapods-' + Array.new(8) { rand(36).to_s(36) }.join
         Pathname.new(work_dir).mkdir
         Dir.chdir(work_dir)
 

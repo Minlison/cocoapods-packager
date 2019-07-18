@@ -77,16 +77,16 @@ module Pod
           target('packager') do
             inherit! :complete
           end
-          # pre_install do |installer|
-          #   # Do something fancy!
-          #   currentFilePath = Pathname.new(File.dirname(__FILE__)).realpath
+          pre_install do |installer|
+            # Do something fancy!
+            currentFilePath = Pathname.new(File.dirname(__FILE__)).realpath
         
             
-          #   conflictPaths = Array["#{currentFilePath}/Pods/XesAppAliPaySDK/XesAppAliPaySDK/XesAppAliPaySDK/Openssl/libcrypto.a","#{currentFilePath}/Pods/XesAppAliPaySDK/XesAppAliPaySDK/XesAppAliPaySDK/Openssl/libssl.a"]
-          #   for path in conflictPaths do
-          #       File.delete(path) if File::exists?( "#{path}" )
-          #   end
-          # end
+            conflictPaths = Array["#{currentFilePath}/Pods/XesAppAliPaySDK/XesAppAliPaySDK/XesAppAliPaySDK/Openssl/libcrypto.a","#{currentFilePath}/Pods/XesAppAliPaySDK/XesAppAliPaySDK/XesAppAliPaySDK/Openssl/libssl.a"]
+            for path in conflictPaths do
+                File.delete(path) if File::exists?( "#{path}" )
+            end
+          end
         end
       end
 

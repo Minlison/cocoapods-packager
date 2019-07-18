@@ -1,4 +1,5 @@
 require 'tmpdir'
+require 'fileutils'
 module Pod
   class Command
     class Package < Command
@@ -22,11 +23,11 @@ module Pod
           ['--subspecs', 'Only include the given subspecs'],
           ['--spec-sources=private,https://github.com/CocoaPods/Specs.git', 'The sources to pull dependent ' \
             'pods from (defaults to https://github.com/CocoaPods/Specs.git)'],
-          ['--local-sources=../Demo,/Demo', '相对 podspec 路径，Paths from which to find local podspecs for transitive dependencies. Multiple local-sources must be comma-delimited.' \
+          ['--local-sources=./', '相对 podspec 路径，Paths from which to find local podspecs for transitive dependencies. Multiple local-sources must be comma-delimited.' \
             'pods from local'],
           ['--no-repos', '不自动添加 pod repo list 显示出的 source'],
           ['--repo-update', 'update repo'],
-          ['--work-dir', 'the dir when build '],
+          ['--work-dir=./', 'the dir when build ']
         ]
       end
 
@@ -54,7 +55,7 @@ module Pod
         @local_sources = argv.option('local-sources', '').split(',')
         @no_repos = argv.flag?('no-repos', false)
         @repo_update = argv.flag?('repo-update', false)
-        @work_dir = argv.flag?('work-dir', nil)
+        @work_dir = argv.option('work-dir', Dir.tmpdir)
         subspecs = argv.option('subspecs')
         @subspecs = subspecs.split(',') unless subspecs.nil?
 
@@ -169,11 +170,20 @@ module Pod
         target_dir = create_target_directory
         return if target_dir.nil?
         rootDir = @work_dir
+        if rootDir[0] != '/'
+          rootDir = File.expand_path(rootDir,@source_dir)
+        end
         if rootDir.nil?
           rootDir = Dir.tmpdir
         end
-        work_dir = rootDir + '/cocoapods-' + Array.new(8) { rand(36).to_s(36) }.join
-        Pathname.new(work_dir).mkdir
+        
+        # work_dir = rootDir + '/cocoapods-' + Array.new(8) { rand(36).to_s(36) }.join
+        work_dir = rootDir + '/cocoapods-packager-build'
+        if File.exist?(work_dir)
+          FileUtils.rm_rf(work_dir)
+        end
+        # Pathname.new(work_dir).mkdir
+        FileUtils.mkdir_p(work_dir)
         Dir.chdir(work_dir)
 
         [target_dir, work_dir]

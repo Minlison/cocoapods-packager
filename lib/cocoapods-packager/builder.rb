@@ -49,7 +49,12 @@ module Pod
 
     def build_static_framework
       UI.puts("Building static framework #{@spec} with configuration #{@config}")
-
+      logfile = "#{Dir.pwd}/build.log"
+      UI.puts("可以在 build 目录下查看 #{logfile} 日志文件")
+      if File.exist?(logfile)
+        FileUtils.rm("#{Dir.pwd}/build.log")
+      end
+      
       defines = compile
       build_sim_libraries(defines)
 
@@ -234,11 +239,12 @@ MAP
         `cp -rp #{@static_sandbox_root}/build/*.bundle #{resources_path} 2>&1`
       else
         `cp -rp #{@static_sandbox_root}/build/*.bundle #{@fwk.resources_path} 2>&1`
-        resources = expand_paths(@spec.consumer(@platform).resources)
-        if resources.count == 0 && bundles.count == 0
-          @fwk.delete_resources
-          return
-        end
+        dependency_names = @static_installer.podfile.dependencies.map(&:name)
+        resources = [@spec, *@spec.recursive_subspecs].flat_map do |spec|
+          if (dependency_names & [spec.name, @spec.name]).any?
+            expand_paths(spec.consumer(@platform).resources)
+          end
+        end.compact.uniq
         if resources.count > 0
           `cp -rp #{resources.join(' ')} #{@fwk.resources_path}`
         end
@@ -316,7 +322,8 @@ MAP
         args = "#{args} CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_REQUIRED=NO"
       end
 
-      command = "xcodebuild #{defines} #{args} CONFIGURATION_BUILD_DIR=#{build_dir} clean build -configuration #{config} -target #{target} -project #{project_root}/Pods.xcodeproj 2>&1"
+      #command = "xcodebuild #{defines} #{args} CONFIGURATION_BUILD_DIR=#{build_dir} clean build -configuration #{config} -target #{target} -project #{project_root}/Pods.xcodeproj 2>&1"
+      command = "xcodebuild #{defines} #{args} CONFIGURATION_BUILD_DIR=#{build_dir} clean build -configuration #{config} -target #{target} -project #{project_root}/Pods.xcodeproj > #{Dir.pwd}/build.log 2>&1"
       output = `#{command}`.lines.to_a
 
       if $?.exitstatus != 0

@@ -22,7 +22,6 @@ module Pod
           @spec_sources,
           @local_sources
         )
-
         static_installer = Installer.new(sandbox, podfile)
         static_installer.install!
 
@@ -57,6 +56,8 @@ module Pod
           sources.each { |s| source s }
           platform(platform_name, deployment_target)
           pod(spec_name, options)
+          # plugin('cocoapods-packager', {})
+          # plugin 查看 cocoapods_plugin.rb 文件内定义
 
           # 增加本地 local  source
           generator.transitive_local_dependencies(spec_file, local_sources).each do |dependency, podspec_file|
@@ -77,16 +78,26 @@ module Pod
           target('packager') do
             inherit! :complete
           end
+
           pre_install do |installer|
             # Do something fancy!
-            currentFilePath = Pathname.new(File.dirname(__FILE__)).realpath
-        
-            
+            # 删除冲突文件  from  xes-App Podfile
+            currentFilePath = generator.config.installation_root
             conflictPaths = Array["#{currentFilePath}/Pods/XesAppAliPaySDK/XesAppAliPaySDK/XesAppAliPaySDK/Openssl/libcrypto.a","#{currentFilePath}/Pods/XesAppAliPaySDK/XesAppAliPaySDK/XesAppAliPaySDK/Openssl/libssl.a"]
             for path in conflictPaths do
                 File.delete(path) if File::exists?( "#{path}" )
             end
           end
+          
+          post_install do |installer|
+            #设置build setting
+            installer.pods_project.targets.each do |target|
+              target.build_configurations.each do |config|
+                config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+              end
+            end
+          end
+          
         end
       end
 

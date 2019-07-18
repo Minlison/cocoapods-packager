@@ -27,7 +27,8 @@ module Pod
             'pods from local'],
           ['--no-repos', '不自动添加 pod repo list 显示出的 source'],
           ['--repo-update', 'update repo'],
-          ['--work-dir=./', 'the dir when build ']
+          ['--work-dir=./', 'the dir when build '],
+          ['--git-source=', 'framework podspec s.source= ']
         ]
       end
 
@@ -56,6 +57,7 @@ module Pod
         @no_repos = argv.flag?('no-repos', false)
         @repo_update = argv.flag?('repo-update', false)
         @work_dir = argv.option('work-dir', Dir.tmpdir)
+        @git_source = argv.option('git-source', nil)
         subspecs = argv.option('subspecs')
         @subspecs = subspecs.split(',') unless subspecs.nil?
 
@@ -66,6 +68,9 @@ module Pod
         @spec = spec_with_path(@name)
         @is_spec_from_path = true if @spec
         @spec ||= spec_with_name(@name)
+        
+        @source = "{ :git => \"#{@git_source}\", :tag => s.version.to_s }" unless @git_source.nil?
+
         super
       end
 

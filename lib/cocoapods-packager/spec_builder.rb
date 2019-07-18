@@ -42,9 +42,9 @@ RB
         spec.all_dependencies(platform)
       end.compact.uniq.each do |d|
         if d.requirement == Pod::Requirement.default
-          spec += "  s.dependency = '#{d.name}'\n" unless d.root_name == @spec.name
+          spec += "  s.dependency '#{d.name}'\n" unless d.root_name == @spec.name
         else
-          spec += "  s.dependency = '#{d.name}', '#{d.requirement.to_s}'\n" unless d.root_name == @spec.name
+          spec += "  s.dependency '#{d.name}', '#{d.requirement.to_s}'\n" unless d.root_name == @spec.name
         end
       end
       
@@ -67,12 +67,6 @@ RB
         attribute_list = %w(name version summary license authors homepage description social_media_url
         docset_url documentation_url screenshots frameworks weak_frameworks libraries requires_arc
         deployment_target xcconfig)
-
-      if "#{@source}".empty?
-        attribute_list << "source"
-      else
-        spec + "  s.source = #{@source}\n"
-      end
       
       attribute_list.each do |attribute|
         value = @spec.attributes_hash[attribute]
@@ -80,6 +74,8 @@ RB
         value = value.dump if value.class == String
         spec += "  s.#{attribute} = #{value}\n"
       end
+      spec += "  s.source = #{@source}\n"
+
       spec
     end
   end

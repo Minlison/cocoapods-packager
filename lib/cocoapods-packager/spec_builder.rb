@@ -33,7 +33,8 @@ RB
   s.xcconfig  =  {
     'FRAMEWORK_SEARCH_PATHS' => '"${PODS_ROOT}/#{@spec.name}/#{platform.name.to_s}"',
     'HEADER_SEARCH_PATHS' => '"${PODS_ROOT}/#{@spec.name}/**/*"',
-    'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES'
+    'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES',
+    'OTHER_LDFLAGS' => '-ObjC -all_load'
   }
 RB
       end

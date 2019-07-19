@@ -31,8 +31,8 @@ RB
   s.#{platform.name}.public_header_files   = '#{fwk_base}/Headers/**/*.h'
   s.#{platform.name}.resources   = '#{fwk_base}/Resources/**/*.*'
   s.user_target_xcconfig  =  {
-    'FRAMEWORK_SEARCH_PATHS' => '"$inherit" "${PODS_ROOT}/#{@spec.name}"',
-    'HEADER_SEARCH_PATHS' => '"$inherit" "${PODS_ROOT}/#{@spec.name}/**"',
+    'FRAMEWORK_SEARCH_PATHS' => '"$inherit" "${PODS_ROOT}/#{@spec.name}/#{platform.name.to_s}"',
+    'HEADER_SEARCH_PATHS' => '"$inherit" "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/Headers/**"',
     'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES'
   }
 RB

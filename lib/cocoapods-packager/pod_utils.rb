@@ -90,22 +90,22 @@ module Pod
             lib_opencv_file_list = `find #{currentFilePath} -name "opencv2.framework"`.split(' ')
             if lib_ijk_file_list.count > 0
                 lib_crypto_file_list.each do |file|
-                    File.delete(path) if File::exists?( "#{file}" )
+                    File.delete(file) if File::exists?( "#{file}" )
                 end
                 lib_ss_file_list.each do |file|
-                    File.delete(path) if File::exists?( "#{file}" )
+                    File.delete(file) if File::exists?( "#{file}" )
                 end
                 else
                 if lib_crypto_file_list.count > 1
                     lib_crypto_file_list.delete_at(0)
                     lib_crypto_file_list.each do |file|
-                        File.delete(path) if File::exists?( "#{file}" )
+                        File.delete(file) if File::exists?( "#{file}" )
                     end
                 end
                 if lib_ss_file_list.count > 1
                     lib_ss_file_list.delete_at(0)
                     lib_ss_file_list.each do |file|
-                        File.delete(path) if File::exists?( "#{file}" )
+                        File.delete(file) if File::exists?( "#{file}" )
                     end
                 end
             end

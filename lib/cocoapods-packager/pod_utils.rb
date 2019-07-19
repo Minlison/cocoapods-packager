@@ -146,7 +146,7 @@ module Pod
         deps = spec.dependencies.map { |dep| spec_with_name(dep.name) }
         [spec, *deps].each do |specification|
           %w(vendored_frameworks vendored_libraries).each do |attrib|
-            if specification.attributes_hash[attrib]
+            if !specification.nil? && specification.attributes_hash[attrib]
               return true
             end
           end

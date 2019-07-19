@@ -27,12 +27,12 @@ RB
   s.#{platform.name}.deployment_target    = '#{platform.deployment_target}'
   s.#{platform.name}.vendored_frameworks   = '#{platform.name.to_s}/*.framework'
   s.#{platform.name}.vendored_libraries   = '#{platform.name.to_s}/*.a'
-  s.#{platform.name}.source_files   = '#{fwk_base}/Headers/**/*.h'
-  s.#{platform.name}.public_header_files   = '#{fwk_base}/Headers/**/*.h'
-  s.#{platform.name}.resources   = '#{fwk_base}/Resources/**/*.*'
-  s.user_target_xcconfig  =  {
-    'FRAMEWORK_SEARCH_PATHS' => '"$inherit" "${PODS_ROOT}/#{@spec.name}/#{platform.name.to_s}"',
-    'HEADER_SEARCH_PATHS' => '"$inherit" "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/Headers/**"',
+  s.#{platform.name}.source_files   = '#{fwk_base}/Versions/A/Headers/**/*.h'
+  s.#{platform.name}.public_header_files   = '#{fwk_base}/Versions/A/Headers/**/*.h'
+  s.#{platform.name}.resources   = '#{fwk_base}/Versions/A/Resources/**/*.*'
+  s.xcconfig  =  {
+    'FRAMEWORK_SEARCH_PATHS' => '"${PODS_ROOT}/#{@spec.name}/#{platform.name.to_s}"',
+    'HEADER_SEARCH_PATHS' => '"${PODS_ROOT}/#{@spec.name}/**/*"',
     'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES'
   }
 RB

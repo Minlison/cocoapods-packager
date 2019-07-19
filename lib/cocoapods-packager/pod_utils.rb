@@ -104,7 +104,7 @@ module Pod
       public
       
       def recursive_subspecs_dependencies(spec)
-        dependencies = []
+        dependencies = spec.dependencies || []
         spec.recursive_subspecs.each do |subspec|
           subspec.dependencies.each do |depency|
             if ! "#{depency}".include? "#{spec.name}"

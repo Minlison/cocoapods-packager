@@ -18,7 +18,8 @@ module Pod
           ['--dynamic',   'Generate dynamic framework.'],
           ['--local',     'Use local state rather than published versions.'],
           ['--bundle-identifier', 'Bundle identifier for dynamic framework'],
-          ['--exclude-deps', 'Exclude symbols from dependencies.'],
+          ['--exclude-deps', 'Exclude symbols from dependencies. default true'],
+          ['--include-deps', 'Include symbols from dependencies. default false'],
           ['--configuration', 'Build the specified configuration (e.g. Debug). Defaults to Release'],
           ['--subspecs', 'Only include the given subspecs'],
           ['--spec-sources=private,https://github.com/CocoaPods/Specs.git', 'The sources to pull dependent ' \
@@ -49,7 +50,8 @@ module Pod
         @force = argv.flag?('force')
         @mangle = argv.flag?('mangle', true)
         @bundle_identifier = argv.option('bundle-identifier', nil)
-        @exclude_deps = argv.flag?('exclude-deps', false)
+        @include_deps = argv.flag?('include-deps', false)
+        @exclude_deps = argv.flag?('exclude-deps', !@include_deps)
         @name = argv.shift_argument
         @source = argv.shift_argument
         @spec_sources = argv.option('spec-sources', 'https://github.com/CocoaPods/Specs.git').split(',')

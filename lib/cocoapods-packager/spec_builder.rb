@@ -2,7 +2,9 @@ module Pod
   class SpecBuilder
     def initialize(spec, source, embedded, dynamic)
       @spec = spec
-      @source = source.nil? ? '{ :path => \'.\' }' : source
+      #https://git.100tal.com/peiyou_xueersiapp_xesappmoduleiosframework/CloudLearning_English.git
+      git_source_name = spec.name.gsub("_HD","")
+      @source = source.nil? ? "{ :git => \"https://git.100tal.com/peiyou_xueersiapp_xesappmoduleiosframework/#{git_source_name}.git\", :tag => s.version.to_s }" : source
       @embedded = embedded
       @dynamic = dynamic
     end

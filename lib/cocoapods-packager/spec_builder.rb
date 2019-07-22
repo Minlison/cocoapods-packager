@@ -22,7 +22,6 @@ module Pod
       if @dynamic
       spec = <<RB
   s.#{platform.name}.deployment_target    = '#{platform.deployment_target}'
-  s.#{platform.name}.vendored_frameworks   = ios/*.framework
 RB
       else
       spec = <<RB
@@ -30,15 +29,26 @@ RB
   s.#{platform.name}.source_files   = '#{fwk_base}/Versions/A/Headers/**/*.h'
   s.#{platform.name}.public_header_files   = '#{fwk_base}/Versions/A/Headers/**/*.h'
   s.#{platform.name}.resources   = '#{fwk_base}/Versions/A/Resources/**/*.*'
-  s.#{platform.name}.vendored_frameworks   = 'ios/*.framework'
   s.xcconfig  =  {
     'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES',
-    'OTHER_LDFLAGS' => '$(inherited) -force_load "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/#{@spec.name}" -ObjC -all_load',
+    'OTHER_LDFLAGS' => '$(inherited) -force_load "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/#{@spec.name}" "-L ${PODS_ROOT}/#{@spec.name}/#{fwk_base}"',
     'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/#{@spec.name}/#{platform.name.to_s}"',
     'HEADER_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/Versions/A/Headers/**"'
   }
 RB
       end
+
+       # vendored_frameworks 
+      vendored_frameworks = [@spec, *@spec.recursive_subspecs].flat_map do |spec|
+        consumer = spec.consumer(platform)
+        tmp_vendored_frameworks = consumer.vendored_frameworks || []
+        tmp_vendored_frameworks
+      end.compact.uniq.flat_map do |framework|
+        "ios/#{File.basename(framework)}"
+      end
+      vendored_frameworks << fwk_base
+
+      spec +=  "  s.#{platform.name}.vendored_frameworks   = #{vendored_frameworks} \n"
 
       # vendored_libraries 
       vendored_libraries = [@spec, *@spec.recursive_subspecs].flat_map do |spec|

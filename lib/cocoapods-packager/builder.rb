@@ -353,8 +353,9 @@ MAP
         args = "#{args} CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_REQUIRED=NO"
       end
 
-      #command = "xcodebuild #{defines} #{args} CONFIGURATION_BUILD_DIR=#{build_dir} clean build -configuration #{config} -target #{target} -project #{project_root}/Pods.xcodeproj 2>&1"
-      command = "xcodebuild #{defines} #{args} CONFIGURATION_BUILD_DIR=#{build_dir} clean build -configuration #{config} -target #{target} -project #{project_root}/Pods.xcodeproj > #{Dir.pwd}/build.log 2>&1"
+      # command = "xcodebuild #{defines} #{args} GENERATE_MASTER_OBJECT_FILE=YES CONFIGURATION_BUILD_DIR=#{build_dir} clean build -configuration #{config} -target #{target} -project #{project_root}/Pods.xcodeproj 2>&1"
+      # command = "xcodebuild #{defines} #{args} CONFIGURATION_BUILD_DIR=#{build_dir} clean build -configuration #{config} -target #{target} -project #{project_root}/Pods.xcodeproj > #{Dir.pwd}/build.log 2>&1"
+      command = "xcodebuild archive DWARF_DSYM_FOLDER_PATH=#{build_dir} #{defines} #{args} CONFIGURATION_BUILD_DIR=#{build_dir} GENERATE_MASTER_OBJECT_FILE=YES clean build -configuration #{config} -target #{target} -project #{project_root}/Pods.xcodeproj 2>&1"
       output = `#{command}`.lines.to_a
 
       if $?.exitstatus != 0

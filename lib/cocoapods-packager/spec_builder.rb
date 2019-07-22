@@ -20,24 +20,49 @@ module Pod
       if @dynamic
       spec = <<RB
   s.#{platform.name}.deployment_target    = '#{platform.deployment_target}'
-  s.#{platform.name}.vendored_frameworks   = '#{platform.name.to_s}/*.framework'
 RB
       else
       spec = <<RB
   s.#{platform.name}.deployment_target    = '#{platform.deployment_target}'
-  s.#{platform.name}.vendored_frameworks   = '#{platform.name.to_s}/*.framework'
-  s.#{platform.name}.vendored_libraries   = '#{platform.name.to_s}/*.a'
   s.#{platform.name}.source_files   = '#{fwk_base}/Versions/A/Headers/**/*.h'
   s.#{platform.name}.public_header_files   = '#{fwk_base}/Versions/A/Headers/**/*.h'
   s.#{platform.name}.resources   = '#{fwk_base}/Versions/A/Resources/**/*.*'
   s.xcconfig  =  {
-    'FRAMEWORK_SEARCH_PATHS' => '"${PODS_ROOT}/#{@spec.name}/#{platform.name.to_s}"',
-    'HEADER_SEARCH_PATHS' => '"${PODS_ROOT}/#{@spec.name}/**/*"',
-    'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES',
-    'OTHER_LDFLAGS' => '-ObjC -all_load'
+    'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES'
+    'OTHER_LDFLAGS' => '$(inherited) -force_load "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/#{@spec.name}" -ObjC -all_load'
   }
 RB
+        lib_file_list = `find #{platform.name.to_s} -name "*.a"`.split(' ')
+        framework_file_list = `find #{platform.name.to_s} -name "*.a"`.split(' ')
+        if lib_file_list.count > 0
+          spec += "  s.#{platform.name}.vendored_libraries   = #{lib_file_list}"
+        end
+        if framework_file_list.count > 0
+          spec +=  "  s.#{platform.name}.vendored_frameworks   = #{framework_file_list}"
+        end
       end
+
+      # frameworks 
+      frameworks = [@spec, *@spec.recursive_subspecs].flat_map do |spec|
+        consumer = spec.consumer(platform)
+        tmp_frameworks = consumer.frameworks || []
+        tmp_frameworks
+      end.compact.uniq
+      spec += "  s.#{platform.name}.frameworks   = #{frameworks} \n" if frameworks.count > 0
+
+      libraries = [@spec, *@spec.recursive_subspecs].flat_map do |spec|
+        consumer = spec.consumer(platform)
+        tmp_libraries = consumer.libraries || []
+        tmp_libraries
+      end.compact.uniq
+      spec += "  s.#{platform.name}.libraries   = #{libraries} \n" if libraries.count > 0
+
+      weak_frameworks = [@spec, *@spec.recursive_subspecs].flat_map do |spec|
+        consumer = spec.consumer(platform)
+        tmp_libraries = consumer.weak_frameworks || []
+        tmp_libraries
+      end.compact.uniq
+      spec += "  s.#{platform.name}.weak_frameworks   = #{weak_frameworks} \n" if weak_frameworks.count > 0
 
       [@spec, *@spec.recursive_subspecs].flat_map do |spec|
         spec.all_dependencies(platform)
@@ -66,7 +91,7 @@ RB
     def spec_header
       spec = "Pod::Spec.new do |s|\n"
         attribute_list = %w(name version summary license authors homepage description social_media_url
-        docset_url documentation_url screenshots frameworks weak_frameworks libraries requires_arc
+        docset_url documentation_url screenshots requires_arc
         deployment_target xcconfig)
       
       attribute_list.each do |attribute|

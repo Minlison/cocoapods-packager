@@ -22,6 +22,7 @@ module Pod
           @spec_sources,
           @local_sources
         )
+
         static_installer = Installer.new(sandbox, podfile)
         static_installer.install!
 
@@ -55,6 +56,7 @@ module Pod
         Pod::Podfile.new do
           sources.each { |s| source s }
           platform(platform_name, deployment_target)
+          # 此处会自动增加非本地依赖项
           pod(spec_name, options)
           # plugin('cocoapods-packager', {})
           # plugin 查看 cocoapods_plugin.rb 文件内定义
@@ -91,21 +93,25 @@ module Pod
             if lib_ijk_file_list.count > 0
                 lib_crypto_file_list.each do |file|
                     File.delete(file) if File::exists?( "#{file}" )
+                    puts "delete conflict lib === #{file}"
                 end
                 lib_ss_file_list.each do |file|
                     File.delete(file) if File::exists?( "#{file}" )
+                    puts "delete conflict lib === #{file}"
                 end
                 else
                 if lib_crypto_file_list.count > 1
                     lib_crypto_file_list.delete_at(0)
                     lib_crypto_file_list.each do |file|
                         File.delete(file) if File::exists?( "#{file}" )
+                        puts "delete conflict lib === #{file}"
                     end
                 end
                 if lib_ss_file_list.count > 1
                     lib_ss_file_list.delete_at(0)
                     lib_ss_file_list.each do |file|
                         File.delete(file) if File::exists?( "#{file}" )
+                        puts "delete conflict lib === #{file}"
                     end
                 end
             end
@@ -140,15 +146,23 @@ module Pod
       public
       
       def recursive_subspecs_dependencies(spec)
-        dependencies = spec.dependencies || []
-        spec.recursive_subspecs.each do |subspec|
-          subspec.dependencies.each do |depency|
-            if ! "#{depency}".include? "#{spec.name}"
-              dependencies << depency
-            end
+
+        dependencies = [@spec, *@spec.recursive_subspecs].flat_map do |all_spec|
+          all_spec.dependencies.flat_map do |depency|
+            depency if ! "#{depency}".include? "#{spec.name}"
           end
-        end
-        return dependencies
+        end.compact.uniq
+        # puts dependencies
+
+        # dependencies = spec.dependencies || []
+        # spec.recursive_subspecs.each do |subspec|
+        #   subspec.dependencies.each do |depency|
+        #     if ! "#{depency}".include? "#{spec.name}"
+        #       dependencies << depency
+        #     end
+        #   end
+        # end
+        dependencies
       end
 
       def transitive_local_dependencies(spec, paths)

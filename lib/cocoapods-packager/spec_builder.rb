@@ -31,7 +31,9 @@ RB
   s.#{platform.name}.resources   = '#{fwk_base}/Versions/A/Resources/**/*.*'
   s.xcconfig  =  {
     'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES',
-    'OTHER_LDFLAGS' => '$(inherited) -force_load "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/#{@spec.name}" -ObjC -all_load'
+    'OTHER_LDFLAGS' => '$(inherited) -force_load "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/#{@spec.name}" -ObjC -all_load',
+    'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/#{@spec.name}/#{platform.name.to_s}"',
+    'HEADER_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/Versions/A/Headers/**"'
   }
 RB
         lib_file_list = `find #{platform.name.to_s} -name "*.a"`.split(' ')

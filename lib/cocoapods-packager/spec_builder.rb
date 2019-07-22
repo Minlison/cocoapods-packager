@@ -30,7 +30,7 @@ RB
   s.#{platform.name}.public_header_files   = '#{fwk_base}/Versions/A/Headers/**/*.h'
   s.#{platform.name}.resources   = '#{fwk_base}/Versions/A/Resources/**/*.*'
   s.xcconfig  =  {
-    'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES'
+    'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES',
     'OTHER_LDFLAGS' => '$(inherited) -force_load "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/#{@spec.name}" -ObjC -all_load'
   }
 RB

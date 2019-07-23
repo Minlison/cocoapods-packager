@@ -8,6 +8,7 @@ module Pod
 
       @use_default_plugins = true
       @has_dependencies = true
+      super(sandbox, podfile, lockfile)
     end
 
     def install!

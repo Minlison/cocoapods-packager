@@ -30,7 +30,8 @@ module Pod
           ['--no-repos', '不自动添加 pod repo list 显示出的 source'],
           ['--repo-update', 'update repo'],
           ['--work-dir=./', 'the dir when build '],
-          ['--git-source=', 'framework podspec s.source= ']
+          ['--git-source=', 'framework podspec s.source= '],
+          ['--output-dsym=', 'generate dSYM file'],
         ]
       end
 
@@ -39,6 +40,7 @@ module Pod
         @library = argv.flag?('library')
         @dynamic = argv.flag?('dynamic')
         @local = argv.flag?('local', false)
+        @output_dsym = argv.flag?('output-dsym', true)
         @package_type = if @embedded
                           :static_framework
                         elsif @dynamic

@@ -7,6 +7,7 @@ module Pod
           @aggregate_targets = aggregate_targets
           @pod_targets = pod_targets
           @auto_fix_conflict = auto_fix_conflict
+          super(aggregate_targets, pod_targets)
         end
 
         def verify_no_duplicate_framework_and_library_names

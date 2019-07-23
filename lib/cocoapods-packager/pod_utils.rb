@@ -23,7 +23,7 @@ module Pod
           @local_sources
         )
 
-        static_installer = Installer.new(sandbox, podfile)
+        static_installer = TalInstaller.new(sandbox, podfile)
         static_installer.install!
 
         unless static_installer.nil?
@@ -81,40 +81,40 @@ module Pod
             inherit! :complete
           end
 
-          pre_install do |installer|
-            # Do something fancy!
-            # 删除冲突文件  from  xes-App Podfile
-            currentFilePath = generator.config.installation_root
-            lib_crypto_file_list = `find #{currentFilePath} -name "libcrypto.a"`.split(' ')
-            lib_ss_file_list = `find #{currentFilePath} -name "libssl.a"`.split(' ')
-            lib_ijk_file_list = `find #{currentFilePath} -name "IJKMediaFramework.framework"`.split(' ')
-            lib_webp_file_list =  `find #{currentFilePath} -name "WebP.framework"`.split(' ')
-            lib_opencv_file_list = `find #{currentFilePath} -name "opencv2.framework"`.split(' ')
-            if lib_ijk_file_list.count > 0
-                lib_crypto_file_list.each do |file|
-                    File.delete(file) if File::exists?( "#{file}" )
-                    puts "delete conflict lib === #{file}"
-                end
-                lib_ss_file_list.each do |file|
-                    File.delete(file) if File::exists?( "#{file}" )
-                    puts "delete conflict lib === #{file}"
-                end
-                else
-                if lib_crypto_file_list.count > 1
-                    lib_crypto_file_list.delete_at(0)
-                    lib_crypto_file_list.each do |file|
-                        File.delete(file) if File::exists?( "#{file}" )
-                        puts "delete conflict lib === #{file}"
-                    end
-                end
-                if lib_ss_file_list.count > 1
-                    lib_ss_file_list.delete_at(0)
-                    lib_ss_file_list.each do |file|
-                        File.delete(file) if File::exists?( "#{file}" )
-                        puts "delete conflict lib === #{file}"
-                    end
-                end
-            end
+          # pre_install do |installer|
+          #   # Do something fancy!
+          #   # 删除冲突文件  from  xes-App Podfile
+          #   currentFilePath = generator.config.installation_root
+          #   lib_crypto_file_list = `find #{currentFilePath} -name "libcrypto.a"`.split(' ')
+          #   lib_ss_file_list = `find #{currentFilePath} -name "libssl.a"`.split(' ')
+          #   lib_ijk_file_list = `find #{currentFilePath} -name "IJKMediaFramework.framework"`.split(' ')
+          #   lib_webp_file_list =  `find #{currentFilePath} -name "WebP.framework"`.split(' ')
+          #   lib_opencv_file_list = `find #{currentFilePath} -name "opencv2.framework"`.split(' ')
+          #   if lib_ijk_file_list.count > 0
+          #       lib_crypto_file_list.each do |file|
+          #           File.delete(file) if File::exists?( "#{file}" )
+          #           puts "delete conflict lib === #{file}"
+          #       end
+          #       lib_ss_file_list.each do |file|
+          #           File.delete(file) if File::exists?( "#{file}" )
+          #           puts "delete conflict lib === #{file}"
+          #       end
+          #       else
+          #       if lib_crypto_file_list.count > 1
+          #           lib_crypto_file_list.delete_at(0)
+          #           lib_crypto_file_list.each do |file|
+          #               File.delete(file) if File::exists?( "#{file}" )
+          #               puts "delete conflict lib === #{file}"
+          #           end
+          #       end
+          #       if lib_ss_file_list.count > 1
+          #           lib_ss_file_list.delete_at(0)
+          #           lib_ss_file_list.each do |file|
+          #               File.delete(file) if File::exists?( "#{file}" )
+          #               puts "delete conflict lib === #{file}"
+          #           end
+          #       end
+          #   end
             
             # if lib_opencv_file_list.count > 0 && lib_webp_file_list.count > 0
             #     lib_webp_file_list.each do |file|
@@ -128,7 +128,7 @@ module Pod
             # for path in conflictPaths do
             #     File.delete(path) if File::exists?( "#{path}" )
             # end
-          end
+          # end
           
           post_install do |installer|
             #设置build setting

@@ -6,6 +6,8 @@ require 'cocoapods-packager/mangle'
 require 'cocoapods-packager/pod_utils'
 require 'cocoapods-packager/spec_builder'
 require 'cocoapods-packager/symbols'
+require 'cocoapods-packager/tal_installer'
+require 'cocoapods-packager/tal_target_validator'
 
 # module CocoapodsPackager
 #     Pod::HooksManager.register('cocoapods-packager', :pre_install) do |context|

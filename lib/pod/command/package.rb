@@ -24,6 +24,7 @@ module Pod
           ['--subspecs', 'Only include the given subspecs'],
           ['--spec-sources=private,https://github.com/CocoaPods/Specs.git', 'The sources to pull dependent ' \
             'pods from (defaults to https://github.com/CocoaPods/Specs.git)'],
+          ['--auto-fix-conflict',   'fix cocoapods conflict .a or .framework , default is true'],
           ['--local-sources=./', '相对 podspec 路径，Paths from which to find local podspecs for transitive dependencies. Multiple local-sources must be comma-delimited.' \
             'pods from local'],
           ['--no-repos', '不自动添加 pod repo list 显示出的 source'],
@@ -64,6 +65,7 @@ module Pod
         @subspecs = subspecs.split(',') unless subspecs.nil?
 
         @config = argv.option('configuration', 'Release')
+        @auto_fix_conflict = argv.flag?('auto-fix-conflict', true)
 
         @source_dir = Dir.pwd
         @is_spec_from_path = false

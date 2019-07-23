@@ -49,11 +49,6 @@ module Pod
 
     def build_static_framework
       UI.puts("Building static framework #{@spec} with configuration #{@config}")
-      logfile = "#{Dir.pwd}/build.log"
-      UI.puts("可以在 build 目录下查看 #{logfile} 日志文件")
-      if File.exist?(logfile)
-        FileUtils.rm("#{Dir.pwd}/build.log")
-      end
       
       defines = compile
       build_sim_libraries(defines)

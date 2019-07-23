@@ -1,6 +1,6 @@
 module Pod
   class Builder
-    def initialize(platform, static_installer, source_dir, static_sandbox_root, dynamic_sandbox_root, public_headers_root, spec, embedded, mangle, dynamic, config, bundle_identifier, exclude_deps)
+    def initialize(platform, static_installer, source_dir, static_sandbox_root, dynamic_sandbox_root, public_headers_root, spec, embedded, mangle, dynamic, config, bundle_identifier, exclude_deps, xcconfig=nil)
       @platform = platform
       @static_installer = static_installer
       @source_dir = source_dir
@@ -12,6 +12,7 @@ module Pod
       @mangle = mangle
       @dynamic = dynamic
       @config = config
+      @xcconfig = xcconfig
       @bundle_identifier = bundle_identifier
       @exclude_deps = exclude_deps
 
@@ -347,10 +348,50 @@ MAP
       if defined?(Pod::DONT_CODESIGN)
         args = "#{args} CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_REQUIRED=NO"
       end
+      # 
+      command = "xcodebuild #{defines} #{args}"
+      command += " CONFIGURATION_BUILD_DIR=#{build_dir} GENERATE_MASTER_OBJECT_FILE=NO"
 
+      if @dynamic
+        archive_path = "#{build_dir}/archive/#{config}"
+        if !File.exist?(archive_path)
+          FileUtils.mkdir_p(archive_path)
+        end
+        command += " -archivePath #{archive_path}/#{target}.xcarchive"
+
+        dsym_path = "#{build_dir}/dsym/#{config}"
+        if !File.exist?(dsym_path)
+          FileUtils.mkdir_p(dsym_path)
+        end
+        command += " DEBUG_INFORMATION_FORMAT=\"dwarf-with-dsym\""
+        command += " DWARF_DSYM_FOLDER_PATH=#{dsym_path}"
+        command += " DWARF_DSYM_FILE_NAME=#{target}.dSYM"
+
+        driver_path = "#{build_dir}/driver/#{config}"
+        if !File.exist?(driver_path)
+          FileUtils.mkdir_p(driver_path)
+        end
+        command += " -derivedDataPath=#{driver_path}"
+      end
+      
+      command += " clean build -configuration #{config}"
+      command += " -target #{target}"
+      command += " -UseNewBuildSystem=NO"
+      
+      if !@xcconfig.nil? && File.exist?(@xcconfig)
+        command += " -xcconfig #{@xcconfig}"
+      end
+
+      command += " -project #{project_root}/Pods.xcodeproj"
+
+      
+      command += " 2>&1"
+      puts "===== build command ======"
+      puts command
+      puts "===== build command ======"
       # command = "xcodebuild #{defines} #{args} GENERATE_MASTER_OBJECT_FILE=YES CONFIGURATION_BUILD_DIR=#{build_dir} clean build -configuration #{config} -target #{target} -project #{project_root}/Pods.xcodeproj 2>&1"
       # command = "xcodebuild #{defines} #{args} CONFIGURATION_BUILD_DIR=#{build_dir} clean build -configuration #{config} -target #{target} -project #{project_root}/Pods.xcodeproj > #{Dir.pwd}/build.log 2>&1"
-      command = "xcodebuild #{defines} #{args} CONFIGURATION_BUILD_DIR=#{build_dir} GENERATE_MASTER_OBJECT_FILE=NO clean build -configuration #{config} -target #{target} -project #{project_root}/Pods.xcodeproj 2>&1"
+      
       output = `#{command}`.lines.to_a
 
       if $?.exitstatus != 0

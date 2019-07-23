@@ -29,9 +29,10 @@ module Pod
             'pods from local'],
           ['--no-repos', '不自动添加 pod repo list 显示出的 source'],
           ['--repo-update', 'update repo'],
-          ['--work-dir=./', 'the dir when build '],
-          ['--git-source=', 'framework podspec s.source= '],
-          ['--output-dsym=', 'generate dSYM file'],
+          ['--work-dir', 'the dir when build '],
+          ['--git-source', 'framework podspec s.source= '],
+          ['--output-dsym', 'generate dSYM file'],
+          ['--xcconfig-path', 'xcode build xcconfig path'],
         ]
       end
 
@@ -63,6 +64,7 @@ module Pod
         @repo_update = argv.flag?('repo-update', false)
         @work_dir = argv.option('work-dir', Dir.tmpdir)
         @git_source = argv.option('git-source', nil)
+        @xcconfig_path = argv.option('xcconfig-path', nil)
         subspecs = argv.option('subspecs')
         @subspecs = subspecs.split(',') unless subspecs.nil?
 
@@ -221,7 +223,8 @@ module Pod
           @dynamic,
           @config,
           @bundle_identifier,
-          @exclude_deps
+          @exclude_deps,
+          @xcconfig_path
         )
 
         builder.build(@package_type)

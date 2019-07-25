@@ -28,7 +28,6 @@ RB
   s.#{platform.name}.deployment_target    = '#{platform.deployment_target}'
   s.#{platform.name}.source_files   = '#{fwk_base}/Versions/A/Headers/**/*.h'
   s.#{platform.name}.public_header_files   = '#{fwk_base}/Versions/A/Headers/**/*.h'
-  s.#{platform.name}.resources   = '#{fwk_base}/Versions/A/Resources/**/*.*'
   s.xcconfig  =  {
     'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES',
     'OTHER_LDFLAGS' => '$(inherited) -force_load "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/#{@spec.name}" "-L ${PODS_ROOT}/#{@spec.name}/#{fwk_base}"',
@@ -37,6 +36,14 @@ RB
   }
 RB
       end
+
+      # resources
+      resource_path = "#{fwk_base}/Versions/A/Resources/**/*.*"
+      resources = `find #{resource_path}`.split(' ')
+      if resources.count > 0
+        spec += "  s.#{platform.name}.resources = '#{fwk_base}/Versions/A/Resources/**/*.*'"
+      end
+      
 
        # vendored_frameworks 
       vendored_frameworks = [@spec, *@spec.recursive_subspecs].flat_map do |spec|

@@ -28,20 +28,18 @@ RB
   s.#{platform.name}.deployment_target    = '#{platform.deployment_target}'
   s.#{platform.name}.source_files   = '#{fwk_base}/Versions/A/Headers/**/*.h'
   s.#{platform.name}.public_header_files   = '#{fwk_base}/Versions/A/Headers/**/*.h'
-  s.xcconfig  =  {
-    'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES',
-    'OTHER_LDFLAGS' => '$(inherited) -force_load "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/#{@spec.name}" "-L ${PODS_ROOT}/#{@spec.name}/#{fwk_base}"',
-    'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/#{@spec.name}/#{platform.name.to_s}"',
-    'HEADER_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/Versions/A/Headers/**"'
-  }
 RB
       end
 
       # resources
-      resource_path = "#{fwk_base}/Versions/A/Resources/**/*.*"
-      resources = `find #{resource_path}`.split(' ')
-      if resources.count > 0
-        spec += "  s.#{platform.name}.resources = '#{fwk_base}/Versions/A/Resources/**/*.*'"
+      spec_resources = [@spec, *@spec.recursive_subspecs].flat_map do |spec|
+        consumer = spec.consumer(platform)
+        tmp_resources = consumer.resources || []
+        tmp_resources
+      end.compact.uniq
+
+      if spec_resources.count > 0
+        spec += "  s.#{platform.name}.resources = '#{fwk_base}/Versions/A/Resources/**/*.*'\n"
       end
       
 
@@ -97,6 +95,17 @@ RB
         end
       end
       
+      # xcconfig
+      xcconfig = <<RB
+  s.xcconfig  =  {
+    'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES',
+    'OTHER_LDFLAGS' => '$(inherited) -force_load "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/#{@spec.name}" "-L ${PODS_ROOT}/#{@spec.name}/#{fwk_base}"',
+    'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/#{@spec.name}/#{platform.name.to_s}"',
+    'HEADER_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/Versions/A/Headers/**"'
+  }
+RB
+      spec += xcconfig
+
       spec
     end
 

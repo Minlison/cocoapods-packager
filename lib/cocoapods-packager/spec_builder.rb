@@ -1,17 +1,18 @@
 module Pod
   class SpecBuilder
-    def initialize(spec, source, embedded, dynamic)
+    def initialize(spec, source, embedded, dynamic, cache_root)
       @spec = spec
       #https://git.100tal.com/peiyou_xueersiapp_xesappmoduleiosframework/CloudLearning_English.git
       git_source_name = spec.name.gsub("_HD","")
       @source = source.nil? ? "{ :git => \"https://git.100tal.com/peiyou_xueersiapp_xesappmoduleiosframework/#{git_source_name}.git\", :tag => s.version.to_s }" : source
       @embedded = embedded
       @dynamic = dynamic
+      @cache_root = cache_root
     end
 
     def framework_path
       if @embedded
-        @spec.name + '.embeddedframework' + '/' + @spec.name + '.framework'
+        'embedded' + '/' + @spec.name + '.framework'
       else
         @spec.name + '.framework'
       end
@@ -97,11 +98,16 @@ RB
       
       # xcconfig
       xcconfig = <<RB
+  path = File.dirname(Pathname.new(__FILE__)).to_s
+  relative_path = path
+  if path.include?('#{@cache_root}')
+    relative_path = "${PODS_ROOT}/#{@spec.name}" 
+  end
   s.xcconfig  =  {
     'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES',
-    'OTHER_LDFLAGS' => '$(inherited) -force_load "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/#{@spec.name}" "-L ${PODS_ROOT}/#{@spec.name}/#{fwk_base}"',
-    'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/#{@spec.name}/#{platform.name.to_s}"',
-    'HEADER_SEARCH_PATHS' => '$(inherited) "${PODS_ROOT}/#{@spec.name}/#{fwk_base}/Versions/A/Headers/**"'
+    'OTHER_LDFLAGS' => ["$(inherited)","-force_load","\#{relative_path}/#{fwk_base}/#{@spec.name}","'-L \#{relative_path}/#{fwk_base}'"],
+    'FRAMEWORK_SEARCH_PATHS' => ["$(inherited)","\#{relative_path}/#{platform.name.to_s}"],
+    'HEADER_SEARCH_PATHS' => ["$(inherited)","\#{relative_path}/#{fwk_base}/Versions/A/Headers/**"]
   }
 RB
       spec += xcconfig

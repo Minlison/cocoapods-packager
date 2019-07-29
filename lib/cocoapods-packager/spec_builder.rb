@@ -40,7 +40,7 @@ RB
       end.compact.uniq
 
       if spec_resources.count > 0
-        spec += "  s.#{platform.name}.resources = '#{fwk_base}/Versions/A/Resources/**/*.*'\n"
+        spec += "  s.#{platform.name}.resources = '#{fwk_base}/Versions/A/Resources/*.*'\n"
       end
       
 

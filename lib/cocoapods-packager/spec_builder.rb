@@ -1,13 +1,13 @@
 module Pod
   class SpecBuilder
-    def initialize(spec, source, embedded, dynamic, cache_root)
+    def initialize(spec, source, embedded, dynamic, force_load = false)
       @spec = spec
       #https://git.100tal.com/peiyou_xueersiapp_xesappmoduleiosframework/CloudLearning_English.git
       git_source_name = spec.name.gsub("_HD","")
       @source = source.nil? ? "{ :git => \"https://git.100tal.com/peiyou_xueersiapp_xesappmoduleiosframework/#{git_source_name}.git\", :tag => s.version.to_s }" : source
       @embedded = embedded
       @dynamic = dynamic
-      @cache_root = cache_root
+      @force_load = force_load
     end
 
     def framework_path
@@ -95,21 +95,46 @@ RB
           spec += "  s.dependency '#{d.name}', '#{d.requirement.to_s}'\n" unless d.root_name == @spec.name
         end
       end
-      
-      # xcconfig
-      xcconfig = <<RB
+
+      platform_framework_path = platform.name.to_s
+      if @embedded
+        platform_framework_path += '/embedded'
+      end
+
+      if @force_load
+  # xcconfig
+  xcconfig = <<RB
   path = File.dirname(Pathname.new(__FILE__)).to_s
   relative_path = path
-  if path.include?('#{@cache_root}')
+  config = Pod::Config.instance
+  if path.include?(config.home_dir.to_s)
     relative_path = "${PODS_ROOT}/#{@spec.name}" 
   end
   s.xcconfig  =  {
     'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES',
     'OTHER_LDFLAGS' => ["$(inherited)","-force_load","\#{relative_path}/#{fwk_base}/#{@spec.name}","'-L \#{relative_path}/#{fwk_base}'"],
-    'FRAMEWORK_SEARCH_PATHS' => ["$(inherited)","\#{relative_path}/#{platform.name.to_s}"],
+    'FRAMEWORK_SEARCH_PATHS' => ["$(inherited)","\#{relative_path}/#{platform_framework_path}"],
     'HEADER_SEARCH_PATHS' => ["$(inherited)","\#{relative_path}/#{fwk_base}/Versions/A/Headers/**"]
   }
 RB
+      else
+  # xcconfig
+  xcconfig = <<RB
+  path = File.dirname(Pathname.new(__FILE__)).to_s
+  relative_path = path
+  config = Pod::Config.instance
+  if path.include?(config.home_dir.to_s)
+    relative_path = "${PODS_ROOT}/#{@spec.name}" 
+  end
+  s.xcconfig  =  {
+    'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES',
+    'FRAMEWORK_SEARCH_PATHS' => ["$(inherited)","\#{relative_path}/#{platform_framework_path}"],
+    'HEADER_SEARCH_PATHS' => ["$(inherited)","\#{relative_path}/#{fwk_base}/Versions/A/Headers/**"]
+  }
+RB
+      end
+      
+
       spec += xcconfig
 
       spec

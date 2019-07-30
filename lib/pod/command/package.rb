@@ -6,7 +6,8 @@ module Pod
       self.summary = 'Package a podspec into a static library.'
       self.arguments = [
         CLAide::Argument.new('NAME', true),
-        CLAide::Argument.new('SOURCE', false)
+        CLAide::Argument.new('SOURCE', false),
+        CLAide::Argument.new('OPTIONS', false)
       ]
 
       def self.options
@@ -33,6 +34,7 @@ module Pod
           ['--git-source', 'framework podspec s.source= '],
           ['--output-dsym', 'generate dSYM file'],
           ['--xcconfig-path', 'xcode build xcconfig path'],
+          ['--disable-force-load', 'do not add -force_load flag in spec file xcconfig , default is false'],
         ]
       end
 
@@ -56,6 +58,8 @@ module Pod
         @bundle_identifier = argv.option('bundle-identifier', nil)
         @include_deps = argv.flag?('include-deps', false)
         @exclude_deps = argv.flag?('exclude-deps', !@include_deps)
+        @auto_fix_conflict = argv.flag?('auto-fix-conflict', true)
+        @disable_force_load = argv.flag?('disable-force-load', false)
         @name = argv.shift_argument
         @source = argv.shift_argument
         @spec_sources = argv.option('spec-sources', 'https://github.com/CocoaPods/Specs.git').split(',')
@@ -69,7 +73,6 @@ module Pod
         @subspecs = subspecs.split(',') unless subspecs.nil?
 
         @config = argv.option('configuration', 'Release')
-        @auto_fix_conflict = argv.flag?('auto-fix-conflict', true)
 
         @source_dir = Dir.pwd
         @is_spec_from_path = false
@@ -153,7 +156,7 @@ module Pod
       end
 
       def build_package
-        builder = SpecBuilder.new(@spec, @source, @embedded, @dynamic, config.cache_root)
+        builder = SpecBuilder.new(@spec, @source, @embedded, @dynamic, !@disable_force_load)
         newspec = builder.spec_metadata
 
         @spec.available_platforms.each do |platform|

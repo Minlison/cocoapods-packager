@@ -1,6 +1,6 @@
 module Pod
   class Builder
-    def initialize(platform, static_installer, source_dir, static_sandbox_root, dynamic_sandbox_root, public_headers_root, spec, embedded, mangle, dynamic, config, bundle_identifier, exclude_deps, xcconfig=nil)
+    def initialize(platform, static_installer, source_dir, static_sandbox_root, dynamic_sandbox_root, public_headers_root, spec, embedded, mangle, dynamic, config, bundle_identifier, exclude_deps, xcconfig = nil, force_enable_module = false)
       @platform = platform
       @static_installer = static_installer
       @source_dir = source_dir
@@ -15,6 +15,7 @@ module Pod
       @xcconfig = xcconfig
       @bundle_identifier = bundle_identifier
       @exclude_deps = exclude_deps
+      @force_enable_module = force_enable_module
 
       @file_accessors = @static_installer.pod_targets.select { |t| t.pod_name == @spec.name }.flat_map(&:file_accessors)
     end
@@ -179,7 +180,16 @@ module Pod
     def compile
       defines = "GCC_PREPROCESSOR_DEFINITIONS='$(inherited) PodsDummy_Pods_#{@spec.name}=PodsDummy_PodPackage_#{@spec.name}'"
       defines << ' ' << @spec.consumer(@platform).compiler_flags.join(' ')
-
+      # not used
+      # info_file_path = @static_sandbox_root
+      # if @dynamic
+      #   info_file_path = @dynamic_sandbox_root
+      # end
+      # info_file_path += "/Target Support Files/Pods-packager/Info.plist"
+      # info_file = Pod::Generator::InfoPlistFile.new(@spec.version, @platform)
+      # info_file.save_as(Pathname.new(info_file_path))
+      # defines << "INFOPLIST_FILE=Target\\ Support\\ Files/Pods-packager/Info.plist"
+      # not used
       if @platform.name == :ios
         options = ios_build_options
       end
@@ -191,6 +201,42 @@ module Pod
       end
 
       defines
+    end
+
+    def create_module_header_if_enabled
+      if @force_enable_module
+        headers_source_root = "#{@public_headers_root}/#{@spec.name}"
+        framework_headers = []
+        normal_headers = []
+        Dir.glob("#{headers_source_root}/**/*.h").each { |h|
+          header_import_name = File.basename(h)
+          framework_headers << "#import <#{@spec.name}/#{header_import_name}>"
+          normal_headers << "#import \"#{header_import_name}\""
+        }
+        module_header = <<HEADER
+#ifdef __OBJC__
+#import <UIKit/UIKit.h>
+#else
+#ifndef FOUNDATION_EXPORT
+#if defined(__cplusplus)
+#define FOUNDATION_EXPORT extern "C"
+#else
+#define FOUNDATION_EXPORT extern
+#endif
+#endif
+#endif
+
+static NSString *const #{@spec.name}VersionString = @"#{@spec.version}";
+static double const #{@spec.name}VersionNumber = #{@spec.version.to_s.to_f};
+
+#if __has_include(<#{@spec.name}/#{@spec.name}.h>)
+#{framework_headers.join("\n")}
+#else
+#{normal_headers.join("\n")}
+#endif
+HEADER
+        File.write("#{@fwk.headers_path}/#{@spec.name}.h", module_header)
+      end
     end
 
     def copy_headers
@@ -205,7 +251,7 @@ module Pod
       if !@spec.module_map.nil?
         module_map_file = @file_accessors.flat_map(&:module_map).first
         module_map = File.read(module_map_file) if Pathname(module_map_file).exist?
-      elsif File.exist?("#{@public_headers_root}/#{@spec.name}/#{@spec.name}.h")
+      elsif File.exist?("#{@public_headers_root}/#{@spec.name}/#{@spec.name}.h") || @force_enable_module
         module_map = <<MAP
 framework module #{@spec.name} {
   umbrella header "#{@spec.name}.h"
@@ -215,6 +261,8 @@ framework module #{@spec.name} {
 }
 MAP
       end
+
+      create_module_header_if_enabled
 
       unless module_map.nil?
         @fwk.module_map_path.mkpath unless @fwk.module_map_path.exist?

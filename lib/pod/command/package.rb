@@ -35,6 +35,7 @@ module Pod
           ['--output-dsym', 'generate dSYM file'],
           ['--xcconfig-path', 'xcode build xcconfig path'],
           ['--disable-force-load', 'do not add -force_load flag in spec file xcconfig , default is false'],
+          ['--force-enable-module', 'force create module map file in framework, default if public headers contains \#{spec.name}.h will create umbrella header and module map'],
         ]
       end
 
@@ -60,6 +61,7 @@ module Pod
         @exclude_deps = argv.flag?('exclude-deps', !@include_deps)
         @auto_fix_conflict = argv.flag?('auto-fix-conflict', true)
         @disable_force_load = argv.flag?('disable-force-load', false)
+        @force_enable_module = argv.flag?('force-enable-module', false)
         @name = argv.shift_argument
         @source = argv.shift_argument
         @spec_sources = argv.option('spec-sources', 'https://github.com/CocoaPods/Specs.git').split(',')
@@ -227,7 +229,8 @@ module Pod
           @config,
           @bundle_identifier,
           @exclude_deps,
-          @xcconfig_path
+          @xcconfig_path,
+          @force_enable_module
         )
 
         builder.build(@package_type)
